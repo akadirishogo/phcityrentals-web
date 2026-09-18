@@ -41,22 +41,24 @@ export function HomePage() {
         />
 
         <Container maxW="container.lg" position="relative" zIndex="1">
-          <VStack align="start" gap="8" maxW="2xl">
+          <VStack align="center" gap="8" maxW="2xl" mx="auto">
             {/* Headline Section */}
-            <VStack align="start" gap="4">
+            <VStack align="center" gap="4">
               <Heading
-                size="4xl"
-                fontWeight="800"
+                size="5xl"
+                fontWeight="600"
                 lineHeight="1.1"
                 letterSpacing="-0.02em"
+                textAlign="center"
               >
                 Find Your Perfect Home in Port Harcourt
               </Heading>
 
               <Text
-                fontSize="lg"
-                color="gray.200"
+                fontSize="md"
+                color="gray.100"
                 maxW="lg"
+                textAlign="center"
               >
                 Explore verified properties, connect with trusted agents, and secure your ideal rental today.
               </Text>
@@ -69,7 +71,7 @@ export function HomePage() {
                 value={searchLocation}
                 onChange={(e) => setSearchLocation(e.target.value)}
                 bg="white"
-                color="slate.900"
+                color="gray.400"
                 size="lg"
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 borderRadius="lg"

@@ -1,8 +1,10 @@
 import { useParams } from 'react-router-dom';
-import { Box, Container, Image, Heading, Text, VStack, HStack, Badge, Button, Spinner } from '@chakra-ui/react';
+import { Box, Container, Heading, Text, VStack, HStack, Badge, Button, Spinner, Separator } from '@chakra-ui/react';
+import { PropertyImage } from '../../components/PropertyImage';
 import { useProperty } from './useProperty';
 import { useSavedProperties } from '../saved/useSavedProperties';
-
+import { getPriceBreakdown, getBreakdownTotal, formatNaira } from '../../core/domains/pricing';
+import { useState } from 'react';
 
 
 
@@ -12,14 +14,45 @@ export function PropertyDetailsPage() {
 
   const { toggleSave, isSaved } = useSavedProperties();
 
-
+  const [activeImage, setActiveImage] = useState(0);
   if (isLoading) return <Spinner />;
   if (error || !property) return <Text>Property not found</Text>;
 
   return (
     <Container maxW="container.lg" py="8">
       {/* Image Gallery */}
-      <Image src={property.images[0]} alt={property.title} width="full" height="400px" objectFit="cover" borderRadius="lg" mb="8" />
+      <VStack align="stretch" gap="3" mb="8">
+        <PropertyImage
+          src={property.images[activeImage]}
+          alt={`${property.title} — image ${activeImage + 1} of ${property.images.length}`}
+          height="420px"
+          borderRadius="lg"
+        />
+
+        {property.images.length > 1 && (
+          <HStack gap="3" overflowX="auto" pb="1" role="group" aria-label="Property images">
+            {property.images.map((image, index) => (
+              <Box
+                key={image}
+                as="button"
+                flexShrink="0"
+                width="110px"
+                borderRadius="md"
+                overflow="hidden"
+                opacity={index === activeImage ? 1 : 0.55}
+                outline={index === activeImage ? '2px solid' : 'none'}
+                outlineColor="orange.400"
+                onClick={() => setActiveImage(index)}
+                aria-label={`Show image ${index + 1}`}
+                aria-current={index === activeImage ? 'true' : undefined}
+              >
+                <PropertyImage src={image} alt="" height="72px" />
+              </Box>
+            ))}
+          </HStack>
+        )}
+      </VStack>
+
 
       <HStack align="start" gap="8">
         {/* Details */}
@@ -32,11 +65,23 @@ export function PropertyDetailsPage() {
             <Text fontSize="lg" color="gray.600">{property.location}</Text>
           </VStack>
 
-          <VStack align="start" gap="2">
-            <Heading size="md">Price</Heading>
-            <Text fontSize="2xl" fontWeight="bold">₦{property.price.toLocaleString()}</Text>
-            <Text fontSize="sm" color="gray.600">All-Inclusive: ₦{property.allInclusivePrice.toLocaleString()}</Text>
-          </VStack>
+          <Box width="full">
+            <Heading size="md" mb="3">All-inclusive price breakdown</Heading>
+            <VStack align="stretch" gap="2" maxW="sm">
+              {getPriceBreakdown(property).map((line) => (
+                <HStack key={line.label} justify="space-between">
+                  <Text color="gray.600">{line.label}</Text>
+                  <Text>{formatNaira(line.amount)}</Text>
+                </HStack>
+              ))}
+              <Separator />
+              <HStack justify="space-between">
+                <Text fontWeight="bold">Total per year</Text>
+                <Text fontWeight="bold" fontSize="lg">{formatNaira(getBreakdownTotal(property))}</Text>
+              </HStack>
+            </VStack>
+          </Box>
+
 
           <VStack align="start" gap="2">
             <Heading size="md">Details</Heading>
@@ -71,7 +116,17 @@ export function PropertyDetailsPage() {
               <Text fontSize="sm">{property.agentPhone}</Text>
               <Text fontSize="sm">{property.agentEmail}</Text>
             </VStack>
-            <Button width="full" colorScheme="green">Contact Agent</Button>
+            <Button asChild colorScheme="green" width="full">
+              <a href={`tel:${property.agentPhone.replace(/\s/g, '')}`}>
+                Call agent
+              </a>
+            </Button>
+
+            <Button asChild variant="outline" width="full">
+              <a href={`mailto:${property.agentEmail}?subject=${encodeURIComponent(`Enquiry: ${property.title}`)}`}>
+                Email agent
+              </a>
+            </Button>
             <Button
               width="full"
               variant={isSaved(property.id) ? 'solid' : 'outline'}

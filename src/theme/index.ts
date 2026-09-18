@@ -9,6 +9,13 @@ export const system = createSystem(defaultConfig, {
     },
   },
   theme: {
+    recipes: {
+      container: {
+        base: {
+          px: { base: '5', md: '8', lg: '12' },
+        },
+      },
+    },
     tokens: {
       fonts: {
         body: { value: FONT_STACK },

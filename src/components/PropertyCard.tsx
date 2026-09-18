@@ -1,6 +1,8 @@
-import { Box, Image, Text, HStack, Badge, Button, VStack } from '@chakra-ui/react';
+import { Box, Text, HStack, Badge, Button, VStack } from '@chakra-ui/react';
+import { PropertyImage } from './PropertyImage';
 import type { Property } from '../core/types';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+
 
 
 interface PropertyCardProps {
@@ -18,6 +20,7 @@ export function PropertyCard({ property, onSave, isSaved }: PropertyCardProps) {
     borderRadius="lg" 
     overflow="hidden" 
     boxShadow="sm"
+    _focusWithin={{ outline: '2px solid', outlineColor: 'orange.400', outlineOffset: '2px' }}
      _hover={{ boxShadow: "md", cursor: "pointer" }}
      onClick={() => navigate(`/property/${property.id}`)}
      height="100%"
@@ -25,28 +28,42 @@ export function PropertyCard({ property, onSave, isSaved }: PropertyCardProps) {
      flexDirection="column"
     >
       {/* Image */}
-      <Image src={property.images[0]} alt={property.title} height="200px" objectFit="cover" />
+      <PropertyImage src={property.images[0]} alt={property.title} height="200px" />
       
       {/* Content */}
       <Box p="4" display="flex" flexDirection="column" flex="1">
-        <VStack justify="space-between" mb="2">
-          <Text fontWeight="bold" fontSize="md">{property.title}</Text>
-          {property.isVerified && <Badge colorScheme="green">Verified</Badge>}
+        <VStack align="center" gap="2" mb="4">
+          <Text fontWeight="bold" fontSize="md" lineClamp={2} textAlign="center">
+            <RouterLink
+              to={`/property/${property.id}`}
+              style={{ color: 'inherit', textDecoration: 'none' }}
+            >
+              {property.title}
+            </RouterLink>
+          </Text>
+          <HStack gap="2" flexWrap="wrap" justify="center">
+            {property.isVerified && <Badge colorScheme="green">Verified</Badge>}
+            <Badge colorScheme="purple" variant="subtle">All-Inclusive</Badge>
+          </HStack>
         </VStack>
         
-        <Text fontSize="sm" color="gray.600" mb="2">{property.location}</Text>
+        <Text fontSize="sm" color="gray.600" mb="2" lineClamp={1} textAlign="center">{property.location}</Text>
         
-        <HStack justify="space-between" mb="4">
-          <Text fontWeight="bold">₦{property.price.toLocaleString()}</Text>
-          <Text fontSize="sm">{property.bedrooms} bed • {property.bathrooms} bath</Text>
-        </HStack>
-        
-        <Button width="full" colorScheme={isSaved ? "green" : "blue"} 
- size="sm" onClick={(e) => {
+        <VStack align="stretch" gap="1" mb="4">
+          <HStack justify="space-between">
+            <Text fontWeight="bold">₦{property.price.toLocaleString()}</Text>
+            <Text fontSize="sm">{property.bedrooms} bed • {property.bathrooms} bath</Text>
+          </HStack>
+          <Text fontSize="xs" color="gray.500">
+            ₦{property.allInclusivePrice.toLocaleString()} all-inclusive
+          </Text>
+        </VStack>
 
-  e.stopPropagation();
-  onSave?.();
-}} marginTop="auto">
+        
+        <Button width="full" colorScheme={isSaved ? "green" : "blue"} size="sm" onClick={(e) => {
+          e.stopPropagation();
+          onSave?.();
+        }} marginTop="auto">
           {isSaved ? "✓ Saved" : "Save Property"}
         </Button>
       </Box>

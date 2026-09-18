@@ -6,7 +6,9 @@ export interface Property {
     description: string;
     location: string;
     price: number; // base price
-    allInclusivePrice: number; // includes utilities
+    allInclusivePrice: number; // price + serviceCharge + agencyFee
+    serviceCharge: number;
+    agencyFee: number;
     bedrooms: number;
     bathrooms: number;
     propertyType: PropertyType;

@@ -2,19 +2,24 @@ import { Box, Container, SimpleGrid, VStack, Input, Text, Spinner, Heading, HSta
 import { useSearchParams } from 'react-router-dom';
 import { useState } from 'react';
 import { PropertyCard } from '../../components/PropertyCard';
-import { PropertyMap } from '../../components/PropertyMap';
 import { useProperties } from './useProperties';
 import type { SearchFilters, PropertyType } from '../../core/types';
 import { useSavedProperties } from '../saved/useSavedProperties';
+import { PropertyMap } from '../../components/PropertyMap';
 
+const PRICE_STEPS = [
+  100_000, 150_000, 200_000, 300_000, 400_000,
+  500_000, 750_000, 1_000_000, 1_500_000, 2_000_000,
+];
+
+const formatPrice = (value: number) =>
+  value >= 1_000_000 ? `₦${value / 1_000_000}M` : `₦${value / 1_000}k`;
 
 
 
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { toggleSave, isSaved } = useSavedProperties();
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   // Add verified filter state (can be 'all', 'verified', or 'unverified')
   const [verifiedFilter, setVerifiedFilter] = useState(searchParams.get('verified') || 'all');
 
@@ -31,6 +36,18 @@ export function SearchPage() {
   });
 
   const { data: properties = [], isLoading, error } = useProperties(filters);
+
+  const PAGE_SIZE = 12;
+  const totalPages = Math.max(1, Math.ceil(properties.length / PAGE_SIZE));
+  // Clamp rather than trust the URL: ?page=99 or ?page=-3 would otherwise render an empty grid.
+  const page = Math.min(Math.max(1, Number(searchParams.get('page')) || 1), totalPages);
+  const pageItems = properties.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const goToPage = (nextPage: number) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('page', String(nextPage));
+    setSearchParams(next);
+  };
 
   
   const handleFilterChange = (key: keyof SearchFilters, value: any) => {
@@ -54,39 +71,58 @@ export function SearchPage() {
       <VStack align="start" gap="6">
         {/* Filters at Top */}
         <Box width="full" pb="6">
-          <Heading size="md" mb="4">Filters</Heading>
-          <HStack gap="4" flexWrap="wrap">
+          <HStack gap="3" flexWrap="nowrap" justify="center" width="full" role="group" aria-label="Property filters">
             <Input
               placeholder="Location"
+              aria-label="Filter by location"
               value={filters.location || ''}
               onChange={(e) => handleFilterChange('location', e.target.value)}
-              width="200px"
-            />
-            
-            <Input
-              type="number"
-              placeholder="Min Price"
-              value={filters.minPrice || ''}
-              onChange={(e) => handleFilterChange('minPrice', e.target.value ? Number(e.target.value) : undefined)}
-              width="150px"
-            />
-            
-            <Input
-              type="number"
-              placeholder="Max Price"
-              value={filters.maxPrice || ''}
-              onChange={(e) => handleFilterChange('maxPrice', e.target.value ? Number(e.target.value) : undefined)}
-              width="150px"
+              flex="1"
+              minW="0"
+              size="sm"
             />
             
             <select
+              aria-label="Minimum price"
+              value={filters.minPrice || ''}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                handleFilterChange('minPrice', e.target.value ? Number(e.target.value) : undefined)
+              }
+              style={{ borderWidth: '1px', borderRadius: '0.375rem', padding: '0.5rem', fontSize: '0.875rem', flex: 1, minWidth: 0 }}
+            >
+              <option value="">Min Price</option>
+              {PRICE_STEPS.map((step) => (
+                <option key={step} value={step}>{formatPrice(step)}</option>
+              ))}
+            </select>
+
+            
+            <select
+              aria-label="Maximum price"
+              value={filters.maxPrice || ''}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                handleFilterChange('maxPrice', e.target.value ? Number(e.target.value) : undefined)
+              }
+              style={{ borderWidth: '1px', borderRadius: '0.375rem', padding: '0.5rem', fontSize: '0.875rem', flex: 1, minWidth: 0 }}
+            >
+              <option value="">Max Price</option>
+              {PRICE_STEPS.map((step) => (
+                <option key={step} value={step}>{formatPrice(step)}</option>
+              ))}
+            </select>
+
+            
+            <select
+              aria-label="Number of bedrooms"
               value={filters.bedrooms || ''}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFilterChange('bedrooms', e.target.value ? Number(e.target.value) : undefined)}
               style={{
                 borderWidth: '1px',
                 borderRadius: '0.375rem',
                 padding: '0.5rem',
-                width: '150px',
+                fontSize: '0.875rem',
+                flex:"1",
+                minWidth: "0"
               }}
             >
               <option value="">Bedrooms</option>
@@ -97,13 +133,16 @@ export function SearchPage() {
             </select>
             
             <select
+              aria-label="Property type"
               value={filters.propertyType || ''}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFilterChange('propertyType', e.target.value || undefined)}
               style={{
                 borderWidth: '1px',
                 borderRadius: '0.375rem',
                 padding: '0.5rem',
-                width: '150px',
+                fontSize: '0.875rem',
+                flex:"1",
+                minWidth: "0"
               }}
             >
               <option value="">Property Type</option>
@@ -113,6 +152,7 @@ export function SearchPage() {
             </select>
             
             <select
+              aria-label="Verification status"
               value={verifiedFilter}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                 setVerifiedFilter(e.target.value);
@@ -122,7 +162,9 @@ export function SearchPage() {
                 borderWidth: '1px',
                 borderRadius: '0.375rem',
                 padding: '0.5rem',
-                width: '150px',
+                fontSize: '0.875rem',
+                flex:"1",
+                minWidth: "0"
               }}
             >
               <option value="all">All Properties</option>
@@ -132,30 +174,9 @@ export function SearchPage() {
           </HStack>
         </Box>
 
-        {/* Results: side-by-side on desktop, toggled on mobile */}
+        {/* Results */}
         <Box width="full">
-          <HStack justify="space-between" mb="6" flexWrap="wrap" gap="3">
-            <Heading size="lg">Results ({properties.length})</Heading>
-
-            <HStack gap="2" display={{ base: 'flex', lg: 'none' }}>
-              <Button
-                size="sm"
-                variant={viewMode === 'list' ? 'solid' : 'outline'}
-                onClick={() => setViewMode('list')}
-                aria-pressed={viewMode === 'list'}
-              >
-                List
-              </Button>
-              <Button
-                size="sm"
-                variant={viewMode === 'map' ? 'solid' : 'outline'}
-                onClick={() => setViewMode('map')}
-                aria-pressed={viewMode === 'map'}
-              >
-                Map
-              </Button>
-            </HStack>
-          </HStack>
+          <Heading size="lg" mb="6">Results ({properties.length})</Heading>
 
           {isLoading && <Spinner />}
           {error && <Text color="red.600">Error loading properties</Text>}
@@ -165,45 +186,54 @@ export function SearchPage() {
 
           {!isLoading && !error && properties.length > 0 && (
             <Flex gap="6" align="start" direction={{ base: 'column', lg: 'row' }}>
-              <Box
-                flex="1"
-                width="full"
-                display={{ base: viewMode === 'map' ? 'none' : 'block', lg: 'block' }}
-              >
-                <SimpleGrid columns={{ base: 1, md: 2, lg: 1, xl: 2 }} gap="6">
-                  {properties.map((property) => (
-                    <Box
-                      key={property.id}
-                      onMouseEnter={() => setActiveId(property.id)}
-                      onMouseLeave={() => setActiveId(null)}
-                      onFocus={() => setActiveId(property.id)}
-                      onBlur={() => setActiveId(null)}
-                    >
-                      <PropertyCard
-                        property={property}
-                        onSave={() => toggleSave(property.id)}
-                        isSaved={isSaved(property.id)}
-                      />
-                    </Box>
-                  ))}
-                </SimpleGrid>
+              <Box flex="1" width="full">
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 2 }} gap="6">
+                {pageItems.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    property={property}
+                    onSave={() => toggleSave(property.id)}
+                    isSaved={isSaved(property.id)}
+                  />
+                ))}
+              </SimpleGrid>
+
+              {totalPages > 1 && (
+                <HStack justify="center" gap="4" mt="10">
+                  <Button
+                    variant="outline"
+                    onClick={() => goToPage(page - 1)}
+                    disabled={page <= 1}
+                  >
+                    Previous
+                  </Button>
+
+                  <Text fontSize="sm" color="gray.600" aria-live="polite">
+                    Page {page} of {totalPages}
+                  </Text>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => goToPage(page + 1)}
+                    disabled={page >= totalPages}
+                  >
+                    Next
+                  </Button>
+                </HStack>
+              )}
               </Box>
 
+               {/* RIGHT — map */}
               <Box
                 flex="1"
                 width="full"
-                height={{ base: '70vh', lg: '75vh' }}
-                position={{ base: 'static', lg: 'sticky' }}
-                top="6"
+                height="75vh"
+                position="sticky"
+                top="4"
                 borderRadius="lg"
                 overflow="hidden"
-                display={{ base: viewMode === 'list' ? 'none' : 'block', lg: 'block' }}
               >
-                <PropertyMap
-                  properties={properties}
-                  activeId={activeId}
-                  onMarkerClick={setActiveId}
-                />
+                <PropertyMap />
               </Box>
             </Flex>
           )}
