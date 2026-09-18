@@ -22,6 +22,7 @@ export function SearchPage() {
   const { toggleSave, isSaved } = useSavedProperties();
   // Add verified filter state (can be 'all', 'verified', or 'unverified')
   const [verifiedFilter, setVerifiedFilter] = useState(searchParams.get('verified') || 'all');
+  const [activeId, setActiveId] = useState<string | null>(null);
 
 
 
@@ -189,12 +190,20 @@ export function SearchPage() {
               <Box flex="1" width="full">
               <SimpleGrid columns={{ base: 1, md: 2, lg: 2 }} gap="6">
                 {pageItems.map((property) => (
-                  <PropertyCard
+                  <Box
                     key={property.id}
-                    property={property}
-                    onSave={() => toggleSave(property.id)}
-                    isSaved={isSaved(property.id)}
+                    onMouseEnter={() => setActiveId(property.id)}
+                    onMouseLeave={() => setActiveId(null)}
+                    onFocus={() => setActiveId(property.id)}
+                    onBlur={() => setActiveId(null)}
+                  >
+                    <PropertyCard
+                      key={property.id}
+                      property={property}
+                      onSave={() => toggleSave(property.id)}
+                      isSaved={isSaved(property.id)}
                   />
+                  </Box>
                 ))}
               </SimpleGrid>
 
@@ -233,7 +242,7 @@ export function SearchPage() {
                 borderRadius="lg"
                 overflow="hidden"
               >
-                <PropertyMap />
+                <PropertyMap properties={pageItems} activeId={activeId} />
               </Box>
             </Flex>
           )}
