@@ -45,7 +45,7 @@ export function HomePage() {
             {/* Headline Section */}
             <VStack align="center" gap="4">
               <Heading
-                size="5xl"
+                size="4xl"
                 fontWeight="600"
                 lineHeight="1.1"
                 letterSpacing="-0.02em"

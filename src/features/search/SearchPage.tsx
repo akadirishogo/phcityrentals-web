@@ -1,4 +1,4 @@
-import { Box, Container, SimpleGrid, VStack, Input, Text, Spinner, Heading, HStack, Button, Flex } from '@chakra-ui/react';
+import { Box, Container, SimpleGrid, VStack, Input, Text, Heading, HStack, Button, Flex } from '@chakra-ui/react';
 import { useSearchParams } from 'react-router-dom';
 import { useState } from 'react';
 import { PropertyCard } from '../../components/PropertyCard';
@@ -6,6 +6,9 @@ import { useProperties } from './useProperties';
 import type { SearchFilters, PropertyType } from '../../core/types';
 import { useSavedProperties } from '../saved/useSavedProperties';
 import { PropertyMap } from '../../components/PropertyMap';
+import { PropertyCardSkeleton } from '../../components/PropertyCardSkeleton';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+
 
 const PRICE_STEPS = [
   100_000, 150_000, 200_000, 300_000, 400_000,
@@ -36,7 +39,11 @@ export function SearchPage() {
     isVerifiedOnly: verifiedFilter === "verified"
   });
 
-  const { data: properties = [], isLoading, error } = useProperties(filters);
+  const debouncedLocation = useDebouncedValue(filters.location, 350);
+  const queryFilters = { ...filters, location: debouncedLocation };
+
+
+  const { data: properties = [], isLoading, error, refetch, isFetching } = useProperties(queryFilters);
 
   const PAGE_SIZE = 12;
   const totalPages = Math.max(1, Math.ceil(properties.length / PAGE_SIZE));
@@ -64,7 +71,8 @@ export function SearchPage() {
     if (newFilters.propertyType) params.append('propertyType', newFilters.propertyType);
     if (newFilters.isVerifiedOnly) params.append('verified', 'true');
     
-    setSearchParams(params);
+    setSearchParams(params, { replace: true });
+
   };
 
   return (
@@ -72,7 +80,7 @@ export function SearchPage() {
       <VStack align="start" gap="6">
         {/* Filters at Top */}
         <Box width="full" pb="6">
-          <HStack gap="3" flexWrap="nowrap" justify="center" width="full" role="group" aria-label="Property filters">
+        <HStack gap="3" flexWrap={{ base: 'wrap', lg: 'nowrap' }} justify="center" width="full" role="group" aria-label="Property filters">
             <Input
               placeholder="Location"
               aria-label="Filter by location"
@@ -179,8 +187,26 @@ export function SearchPage() {
         <Box width="full">
           <Heading size="lg" mb="6">Results ({properties.length})</Heading>
 
-          {isLoading && <Spinner />}
-          {error && <Text color="red.600">Error loading properties</Text>}
+          {isLoading && (
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 2 }} gap="6">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <PropertyCardSkeleton key={index} />
+              ))}
+            </SimpleGrid>
+          )}
+
+          {error && (
+            <VStack align="start" gap="3" py="8">
+              <Heading size="sm">We couldn’t load these results</Heading>
+              <Text color="gray.600">
+                Something went wrong reaching the property service. Your filters are still applied.
+              </Text>
+              <Button onClick={() => refetch()} loading={isFetching}>
+                Try again
+              </Button>
+            </VStack>
+          )}
+
           {!isLoading && !error && properties.length === 0 && (
             <Text color="gray.600">No properties found. Try adjusting your filters.</Text>
           )}

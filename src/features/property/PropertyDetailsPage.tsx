@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { Box, Container, Heading, Text, VStack, HStack, Badge, Button, Spinner, Separator } from '@chakra-ui/react';
+import { Box, Container, Heading, Text, VStack, HStack, Badge, Button, Spinner, Separator, Stack } from '@chakra-ui/react';
 import { PropertyImage } from '../../components/PropertyImage';
 import { useProperty } from './useProperty';
 import { useSavedProperties } from '../saved/useSavedProperties';
@@ -54,7 +54,7 @@ export function PropertyDetailsPage() {
       </VStack>
 
 
-      <HStack align="start" gap="8">
+      <Stack direction={{ base: 'column', lg: 'row' }} align="start" gap="8">
         {/* Details */}
         <VStack align="start" flex="1" gap="6">
           <VStack align="start" gap="2">
@@ -108,7 +108,7 @@ export function PropertyDetailsPage() {
         </VStack>
 
         {/* Agent Info */}
-        <Box width="300px" borderWidth="1" borderRadius="lg" p="6">
+        <Box width={{ base: 'full', lg: '320px' }} flexShrink="0" borderWidth="1px" borderRadius="lg" p="6">
           <Heading size="md" mb="4">Agent Info</Heading>
           <VStack align="start" gap="4">
             <VStack align="start" gap="1">
@@ -137,7 +137,7 @@ export function PropertyDetailsPage() {
 
           </VStack>
         </Box>
-      </HStack>
+      </Stack>
     </Container>
   );
 }

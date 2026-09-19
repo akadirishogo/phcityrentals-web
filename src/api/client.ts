@@ -6,8 +6,14 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Get all properties
 export async function getProperties(filters?: SearchFilters): Promise<Property[]> {
-  await delay(300); // Simulate network
+  await delay(300);
+   // Simulate network
   
+   if (new URLSearchParams(window.location.search).has('simulateError')) {
+    throw new Error('Unable to reach the property service');
+  }
+
+
   let results = MOCK_PROPERTIES;
   
   if (filters) {

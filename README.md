@@ -122,8 +122,38 @@ The mock data deliberately includes these cases — properties 7 and 23 have no 
 
 ## Testing
 
-<!-- TODO: fill in once tests are written -->
-> **Placeholder.** Describe what is tested, how to run it, and the results.
+```bash
+npm test             # run once
+npm run test:watch   # re-run on change
+```
+
+**Result: 17 tests passing across 2 files.**
+
+Vitest, configured through the existing Vite config so tests resolve imports exactly as
+the app does. The default environment is `node` rather than `jsdom` — the tested layers are
+pure TypeScript with no DOM dependency, which is the `core/` boundary working as intended.
+
+| File | Covers |
+|---|---|
+| `src/core/domains/pricing.test.ts` | Breakdown composition; the invariant that displayed lines sum to the displayed total; that this holds for all 40 properties; currency formatting |
+| `src/api/client.test.ts` | Each filter in isolation, filters combined, case-insensitive partial location matching, empty results, single-property lookup including not-found |
+
+**What I chose not to test, and why.** I did not write tests asserting that components
+render. A test checking that a button appears proves little — it is visible on screen. The
+value is in rules that can be quietly wrong: whether a filter actually filters, whether
+"3 bedrooms" means exactly three or three-or-more, whether a price breakdown adds up.
+
+Two deliberate details:
+
+- Assertions are guarded with `expect(results.length).toBeGreaterThan(0)` before any
+  `.every(...)` check, because `[].every()` returns `true` for an empty array. Without the
+  guard, a filter returning nothing at all would pass every test.
+- The bedroom test asserts both `>= 3` and that some result exceeds 3. That documents the
+  filter as intentionally a minimum rather than an exact match, so a later "fix" to `===`
+  fails the suite instead of silently changing behaviour.
+
+**Not covered:** component rendering and the `useSavedProperties` hook, both of which need
+a jsdom environment. See "What I would do with more time."
 
 ---
 
