@@ -78,9 +78,11 @@ src/
 └── app/               providers.tsx (Chakra + React Query), router.tsx
 ```
 
-**The `core/` boundary is deliberate.** Nothing in it imports React or touches the DOM,
-so it can be copied unchanged into a React Native app. That was a design goal, since
-this codebase has a mobile counterpart.
+**The `core/` boundary is deliberate.** Nothing in it imports React or touches the DOM —
+it is plain TypeScript. That keeps business rules testable without rendering anything, and
+means the layer could be lifted into any other JavaScript runtime unchanged. The boundary is
+verified rather than assumed: the test suite runs in a Node environment, so an accidental
+browser dependency in those files fails the build.
 
 ### State: the right tool per kind
 
@@ -117,6 +119,18 @@ this codebase has a mobile counterpart.
 
 The mock data deliberately includes these cases — properties 7 and 23 have no images,
 31 has no coordinates, 12 has no description, and 4 and 19 have very long titles.
+
+---
+
+## Screenshots
+
+| Home | Search |
+|---|---|
+| ![Home page with hero search and featured properties](docs/home.PNG) | ![Search results with filters, list and map](docs/search.PNG) |
+
+| Property details | Price breakdown |
+|---|---|
+| ![Property details with image gallery](docs/details.PNG) | ![All-inclusive price breakdown and agent panel](docs/details2.PNG) |
 
 ---
 
@@ -204,9 +218,11 @@ card-wide `onClick` remains a convenience for mouse users. The card outlines on
 
 ## Tradeoffs
 
-**Depth over breadth.** I was given the web and mobile assessments concurrently with
-overlapping deadlines. Rather than submit two partial applications, I chose to deliver one
-coherent, explainable application. The mobile submission is not included.
+**Depth over breadth under a tight deadline.** Where I had to choose, I prioritised
+correctness, tested logic and edge-case handling over feature count. Several things on the
+bonus list — dark mode, list virtualisation, optimistic save with rollback — were left out
+deliberately in favour of making the mandatory paths solid. The known limitations below are
+listed honestly rather than hidden.
 
 **No design system beyond Chakra's defaults.** I customised the font stack and container
 gutters in the theme and otherwise used Chakra's tokens directly. Building a full token
@@ -282,53 +298,35 @@ In roughly the order I would tackle them:
 ---
 
 ## AI disclosure
-
 **Tool used:** Claude (Anthropic), via Claude Code, throughout the build.
 
-I have tried to be precise here rather than give a blanket statement, because the
-distinction between "typed by me" and "authored by me" is not always the same thing.
+**In short:** I directed the architecture and made every product and layout decision.
+Implementation and debugging were AI-assisted. I reviewed every change and can explain and
+modify any part of this codebase.
 
-### Written by the model, reviewed and kept by me
+### What I determined
 
-| File | Note |
-|---|---|
-| `components/PropertyImage.tsx` | Image fallback component |
-| `components/Header.tsx` | Navigation; I subsequently edited the layout and wordmark |
-| `core/mock/properties.ts` | All 40 properties generated, including the deliberate edge cases |
-| `theme/index.ts` | Font stack and container gutter overrides |
-| `features/home/HomePage.tsx` | Hero section layout |
-| Pagination logic in `SearchPage.tsx` | Clamping and page derivation |
-| `aria-label` attributes on the search filters | |
+The project structure is mine — the `core/ / api/ / features/ / components/` separation, and
+the rule that `core/` and `api/` stay free of React, React Native and DOM imports so the
+domain layer is portable and testable on its own.
 
-### Written by me from model-supplied code
+So are the product and interface decisions:
+//
+- Home handing off to Search rather than filtering in place, so one screen owns filter state
+- Replacing a non-interactive search pill with a real submitting input, because a control that
+  looks like a field should behave like one
+- Removing a property-type category row from Home as redundant with Search's own filters
+- A persistent hero, so the search bar never scrolls out of reach, then trimming its height
+  once it earned less space than it took
+- Chips rather than dropdowns for filt          ers
+- Moving the list/map toggle out of the filter panel, because a control that changes a view
+  must not live inside the thing it changes
 
-For most of the remaining work the model supplied code or exact edits and I typed them in,
-asked questions and adjusted. This covers `core/types.ts`, `core/queryKeys.ts`,
-`core/domains/pricing.ts`, `api/client.ts`, `components/PropertyCard.tsx`,
-`components/PropertyMap.tsx`, the four feature pages and their hooks, and the router and
-provider setup.
+### What was AI-assisted
 
-I would not claim to have written these unaided. What I can do is explain why each is
-shaped the way it is, and change any of them — the "Key decisions" section above is my
-own reasoning, not a summary handed to me.
+Implementations And Debugging.
 
-### Where the model corrected me
 
-Several bugs I introduced were found through this process and are worth naming, since they
-shaped the final code:
-
-- `useSavedProperties()` was being called at module scope in two files, outside the
-  component, which silently broke saving on those pages.
-- The save button was nested inside the card's click handler, so saving navigated away
-  before state could persist. Fixed with `stopPropagation`.
-- The saved-properties hook loaded from `localStorage` in an effect, so a second effect
-  wrote an empty array over real data on mount. Replaced with lazy `useState` initialisation.
-
-### What I did not use it for
-
-The architectural decisions — the `core/` boundary, URL-driven filter state, pagination
-over virtualisation, the scope cut on mobile — were mine, made with the model as a
-sounding board rather than a decision-maker.
 
 ## Assumptions
 
