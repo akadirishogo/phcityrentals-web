@@ -12,7 +12,7 @@ Built for the PHCityRent Frontend Engineer take-home assessment.
 **Requirements:** Node.js 20.17+ and npm.
 
 ```bash
-git clone <REPO_URL>
+git clone https://github.com/akadirishogo/phcityrentals-web
 cd phcityrent-web
 npm install
 npm run dev
