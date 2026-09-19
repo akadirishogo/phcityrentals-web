@@ -60,7 +60,7 @@ export function PropertyDetailsPage() {
           <VStack align="start" gap="2">
             <HStack>
               <Heading size="xl">{property.title}</Heading>
-              {property.isVerified && <Badge colorScheme="green">Verified</Badge>}
+              {property.isVerified && <Badge colorPalette="green">Verified</Badge>}
             </HStack>
             <Text fontSize="lg" color="gray.600">{property.location}</Text>
           </VStack>
@@ -96,7 +96,7 @@ export function PropertyDetailsPage() {
             <Heading size="md">Amenities</Heading>
             <HStack flexWrap="wrap" gap="2">
               {property.amenities.map((amenity) => (
-                <Badge key={amenity} colorScheme="blue">{amenity}</Badge>
+                <Badge key={amenity} colorPalette="blue">{amenity}</Badge>
               ))}
             </HStack>
           </VStack>
@@ -116,7 +116,7 @@ export function PropertyDetailsPage() {
               <Text fontSize="sm">{property.agentPhone}</Text>
               <Text fontSize="sm">{property.agentEmail}</Text>
             </VStack>
-            <Button asChild colorScheme="green" width="full">
+            <Button asChild colorPalette="green" width="full">
               <a href={`tel:${property.agentPhone.replace(/\s/g, '')}`}>
                 Call agent
               </a>

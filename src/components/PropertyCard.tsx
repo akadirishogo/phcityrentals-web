@@ -42,8 +42,8 @@ export function PropertyCard({ property, onSave, isSaved }: PropertyCardProps) {
             </RouterLink>
           </Text>
           <HStack gap="2" flexWrap="wrap" justify="center">
-            {property.isVerified && <Badge colorScheme="green">Verified</Badge>}
-            <Badge colorScheme="purple" variant="subtle">All-Inclusive</Badge>
+            {property.isVerified && <Badge colorPalette="green">Verified</Badge>}
+            <Badge colorPalette="purple" variant="subtle">All-Inclusive</Badge>
           </HStack>
         </VStack>
         
@@ -60,7 +60,7 @@ export function PropertyCard({ property, onSave, isSaved }: PropertyCardProps) {
         </VStack>
 
         
-        <Button width="full" colorScheme={isSaved ? "green" : "blue"} size="sm" onClick={(e) => {
+        <Button width="full" colorPalette={isSaved ? "green" : "blue"} size="sm" onClick={(e) => {
           e.stopPropagation();
           onSave?.();
         }} marginTop="auto">

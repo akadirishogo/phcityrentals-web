@@ -132,7 +132,7 @@ export function HomePage() {
           >
             <Button
               variant="outline"
-              colorScheme="slate"
+              colorPalette="slate"
               size="lg"
               onClick={() => navigate('/search')}
               fontWeight="600"

@@ -58,7 +58,7 @@ export function SearchPage() {
   };
 
   
-  const handleFilterChange = (key: keyof SearchFilters, value: any) => {
+  const handleFilterChange = <K extends keyof SearchFilters>(key: K, value: SearchFilters[K]) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
     
@@ -144,7 +144,7 @@ export function SearchPage() {
             <select
               aria-label="Property type"
               value={filters.propertyType || ''}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFilterChange('propertyType', e.target.value || undefined)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFilterChange('propertyType', (e.target.value || undefined) as PropertyType | undefined)}
               style={{
                 borderWidth: '1px',
                 borderRadius: '0.375rem',
